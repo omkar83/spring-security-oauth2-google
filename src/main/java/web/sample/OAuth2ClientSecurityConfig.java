@@ -108,12 +108,12 @@ public class OAuth2ClientSecurityConfig extends WebSecurityConfigurerAdapter {
 		// Defaults to use current URI
 		/*
 		 * If a pre-established redirect URI is used, it will need to be an
-		 * absolute URI. To do so, it'll need to compute the URI from a
-		 * request. The HTTP request object is available when you override
+		 * absolute URI. To do so, it'll need to compute the URI from a request.
+		 * The HTTP request object is available when you override
 		 * OAuth2ClientAuthenticationProcessingFilter#attemptAuthentication().
 		 *
 		 * details.setPreEstablishedRedirectUri(
-		 * 		env.getProperty("oauth2.redirectUrl"));
+		 * env.getProperty("oauth2.redirectUrl"));
 		 * details.setUseCurrentUri(false);
 		 */
 		details.setAuthenticationScheme(AuthenticationScheme.query);
@@ -133,14 +133,11 @@ public class OAuth2ClientSecurityConfig extends WebSecurityConfigurerAdapter {
 	@Bean
 	@Description("Filter that checks for authorization code, "
 			+ "and if there's none, acquires it from authorization server")
-	public OAuth2ClientAuthenticationProcessingFilter
-				oauth2ClientAuthenticationProcessingFilter() {
+	public OAuth2ClientAuthenticationProcessingFilter oauth2ClientAuthenticationProcessingFilter() {
 		// Used to obtain access token from authorization server (AS)
-		OAuth2RestOperations restTemplate = new OAuth2RestTemplate(
-				authorizationCodeResource(),
-				oauth2ClientContext);
-		OAuth2ClientAuthenticationProcessingFilter filter =
-				new OAuth2ClientAuthenticationProcessingFilter(oauth2FilterCallbackPath);
+		OAuth2RestOperations restTemplate = new OAuth2RestTemplate(authorizationCodeResource(), oauth2ClientContext);
+		OAuth2ClientAuthenticationProcessingFilter filter = new OAuth2ClientAuthenticationProcessingFilter(
+				oauth2FilterCallbackPath);
 		filter.setRestTemplate(restTemplate);
 		// Set a service that validates an OAuth2 access token
 		// We can use either Google API's UserInfo or TokenInfo
@@ -152,8 +149,7 @@ public class OAuth2ClientSecurityConfig extends WebSecurityConfigurerAdapter {
 	@Bean
 	@Description("Google API UserInfo resource server")
 	public GoogleUserInfoTokenServices googleUserInfoTokenServices() {
-		GoogleUserInfoTokenServices userInfoTokenServices =
-				new GoogleUserInfoTokenServices(userInfoUri, clientId);
+		GoogleUserInfoTokenServices userInfoTokenServices = new GoogleUserInfoTokenServices(userInfoUri, clientId);
 		// TODO Configure bean to use local database to read authorities
 		// userInfoTokenServices.setAuthoritiesExtractor(authoritiesExtractor);
 		return userInfoTokenServices;
@@ -167,42 +163,28 @@ public class OAuth2ClientSecurityConfig extends WebSecurityConfigurerAdapter {
 
 	@Override
 	public void configure(WebSecurity web) throws Exception {
-		web.ignoring().antMatchers(
-				"/", "/static/**", "/webjars/**");
+		web.ignoring().antMatchers("/", "/static/**", "/webjars/**");
 	}
 
 	@Override
 	protected void configure(HttpSecurity http) throws Exception {
-		http.exceptionHandling()
-					.authenticationEntryPoint(authenticationEntryPoint())
-			.and()
-				.authorizeRequests()
-					.anyRequest().authenticated()
-			.and()
-				.logout()
-					.logoutUrl("/logout")
-					.logoutSuccessUrl("/")
-			/* No need for form-based login or basic authentication
-			.and()
-				.formLogin()
-					.loginPage("...")
-					.loginProcessingUrl("...")
-			.and()
-				.httpBasic()
-			 */
-			.and()
-				.addFilterAfter(
-					oauth2ClientContextFilter,
-					ExceptionTranslationFilter.class)
-				.addFilterBefore(
-					oauth2ClientAuthenticationProcessingFilter(),
-					FilterSecurityInterceptor.class)
+		http.exceptionHandling().authenticationEntryPoint(authenticationEntryPoint()).and().authorizeRequests()
+				.anyRequest().authenticated()
+				.and().logout().logoutUrl("/logout").logoutSuccessUrl("/")
+				/*
+				 * No need for form-based login or basic authentication .and()
+				 * .formLogin() .loginPage("...") .loginProcessingUrl("...")
+				 * .and() .httpBasic()
+				 */
+				.and().addFilterAfter(oauth2ClientContextFilter, ExceptionTranslationFilter.class)
+				.addFilterBefore(oauth2ClientAuthenticationProcessingFilter(), FilterSecurityInterceptor.class)
 				.anonymous()
 				// anonymous login must be disabled,
 				// otherwise an anonymous authentication will be created,
 				// and the UserRedirectRequiredException will not be thrown,
-				// and the user will not be redirected to the authorization server
-					.disable();
+				// and the user will not be redirected to the authorization
+				// server
+				.disable();
 	}
 
 	@Override
@@ -212,17 +194,14 @@ public class OAuth2ClientSecurityConfig extends WebSecurityConfigurerAdapter {
 
 	private static class NoopAuthenticationManager implements AuthenticationManager {
 		@Override
-		public Authentication authenticate(Authentication authentication)
-				throws AuthenticationException {
-			throw new UnsupportedOperationException(
-					"No authentication should be done with this AuthenticationManager");
+		public Authentication authenticate(Authentication authentication) throws AuthenticationException {
+			throw new UnsupportedOperationException("No authentication should be done with this AuthenticationManager");
 		}
 	}
-	
+
 	@Bean
 	@Description("Enables ${...} expressions in the @Value annotations"
-			+ " on fields of this configuration. Not needed if one is"
-			+ " already available.")
+			+ " on fields of this configuration. Not needed if one is" + " already available.")
 	public static PropertySourcesPlaceholderConfigurer propertySourcesPlaceholderConfigurer() {
 		return new PropertySourcesPlaceholderConfigurer();
 	}
